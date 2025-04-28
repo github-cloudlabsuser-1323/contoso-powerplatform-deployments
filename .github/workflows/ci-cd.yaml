@@ -1,51 +1,38 @@
 name: Power Platform CI/CD
+
 on:
   push:
     branches:
       - develop
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      # Use the Power Platform tool installer action
-      - name: Power Platform Tool Installer
-        uses: microsoft/powerplatform-actions/tool-installer@v0
-      
-      # Authenticate using a service principal
-      - name: Power Platform Auth
-        uses: microsoft/powerplatform-actions/auth@v0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          environment-url: "https://orgc7fa0d66.crm.dynamics.com/"
-          app-id: ${{ secrets.AZURE_CLIENT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      
-      - name: List solutions directory
+          node-version: '16'
+
+      - name: Install Power Platform CLI
+        run: npm install -g pac@latest
+
+      - name: Authenticate with Power Platform
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          POWERPLATFORM_URL: ${{ secrets.POWERPLATFORM_URL }}
         run: |
-          ls -la
-          ls -la ./solution_export || echo "solution_export directory not found"
+          pac auth create --url $POWERPLATFORM_URL --clientId $AZURE_CLIENT_ID --tenant $AZURE_TENANT_ID --clientSecret $AZURE_CLIENT_SECRET
       
-      # Pack solution if needed
-      - name: Pack Solution
-        uses: microsoft/powerplatform-actions/pack-solution@v0
-        with:
-          solution-folder: ./solution_export
-          solution-file: ./solution_output/ContosoSolution.zip
-          solution-type: Both
-      
-      # Check the output directory
-      - name: Check solution file
+      - name: Validate Solution
         run: |
-          ls -la ./solution_output || echo "Solution output directory not found"
+          pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
       
-      # Import the solution
-      - name: Import Solution
-        uses: microsoft/powerplatform-actions/import-solution@v0
-        with:
-          environment-url: "https://orgc7fa0d66.crm.dynamics.com/"
-          solution-file: ./solution_output/ContosoSolution.zip
-          force-overwrite: true
-          publish-changes: true
+      - name: Deploy to Test Environment
+        run: |
+          pac solution deploy --path "./solution_export" --solutionName "ContosoSolution" --target "test"
