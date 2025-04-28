@@ -31,13 +31,7 @@ jobs:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         shell: pwsh
         run: |
-          pac auth clear
-          pac auth create `
-            --url 'https://orgc7fa0d66.crm.dynamics.com/' `
-            --applicationId $env:AZURE_CLIENT_ID `
-            --clientSecret $env:AZURE_CLIENT_SECRET `
-            --tenant $env:AZURE_TENANT_ID `
-            --name 'Contoso-PP-BuildTools'
+          pac auth create --name Contoso-PP-BuildTools --applicationId 2fb0f645-b890-4367-adf0-05837a4ad6f9 --clientSecret omp8Q~q-5iE9M2p5bvYbSGA4ZCH26of6qLJIydnK --tenant ecdbacb9-a7b8-41cd-ab42-cf0d41acd4f3
 
       # Validate the solution
       - name: Validate Solution
