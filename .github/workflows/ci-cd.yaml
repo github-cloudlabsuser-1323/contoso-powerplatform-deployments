@@ -3,7 +3,7 @@ name: Install PAC and Authenticate
 on:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   install-and-authenticate:
