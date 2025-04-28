@@ -27,16 +27,21 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          echo "Debug: Starting authentication step"
-          echo "Debug: Client ID length: ${#AZURE_CLIENT_ID}"
-          echo "Debug: Tenant ID length: ${#AZURE_TENANT_ID}"
-          echo "Debug: Client Secret length: ${#AZURE_CLIENT_SECRET}"
-          echo "Debug: First few characters of Client ID: ${AZURE_CLIENT_ID:0:4}..."
-          echo "Debug: First few characters of Tenant ID: ${AZURE_TENANT_ID:0:4}..."
+          echo "Debug: Node.js version:"
+          node --version
+          echo "Debug: NPM version:"
+          npm --version
+          echo "Debug: Checking if secrets exist:"
+          if [ -n "$AZURE_CLIENT_ID" ]; then echo "Client ID exists"; else echo "Client ID is empty"; fi
+          if [ -n "$AZURE_TENANT_ID" ]; then echo "Tenant ID exists"; else echo "Tenant ID is empty"; fi
+          if [ -n "$AZURE_CLIENT_SECRET" ]; then echo "Client Secret exists"; else echo "Client Secret is empty"; fi
+          echo "Debug: Installing PAC CLI with specific Node flags:"
+          NODE_OPTIONS=--no-experimental-fetch npm install -g pac@latest
+          echo "Debug: PAC version:"
           pac --version
           pac auth create --name Contoso-PP-BuildTools --applicationId "$AZURE_CLIENT_ID" --clientSecret "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
-          echo "Debug: Authentication command exit code: $?"
-          pac auth create --name Contoso-PP-BuildTools --applicationId ${{ env.AZURE_CLIENT_ID }} --clientSecret ${{ env.AZURE_CLIENT_SECRET }} --tenant ${{ env.AZURE_TENANT_ID }} 
+                  echo "Debug: Authentication command exit code: $?"
+                  pac auth create --name Contoso-PP-BuildTools --applicationId ${{ env.AZURE_CLIENT_ID }} --clientSecret ${{ env.AZURE_CLIENT_SECRET }} --tenant ${{ env.AZURE_TENANT_ID }} 
 
       - name: Validate Solution
         run: |
