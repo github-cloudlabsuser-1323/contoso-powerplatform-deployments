@@ -7,7 +7,8 @@ on:
 
 jobs:
   build-deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,14 +26,14 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          POWERPLATFORM_URL: ${{ secrets.POWERPLATFORM_URL }}
         run: |
-          pac auth create --url $POWERPLATFORM_URL --clientId $AZURE_CLIENT_ID --tenant $AZURE_TENANT_ID --clientSecret $AZURE_CLIENT_SECRET
-      
+          pac auth clear
+          pac auth create --name Contoso-PP-BuildTools --applicationId $env:AZURE_CLIENT_ID --clientSecret $env:AZURE_CLIENT_SECRET --tenant $env:AZURE_TENANT_ID 
+
       - name: Validate Solution
         run: |
-          pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
-      
+          pac solution validate --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
+
       - name: Deploy to Test Environment
         run: |
-          pac solution deploy --path "./solution_export" --solutionName "ContosoSolution" --target "test"
+          pac solution deploy --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
