@@ -1,37 +1,40 @@
-name: Authenticate with Power Platform (Service Principal)
+name: Power Platform CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Power Platform CLI
+        run: npm install -g pac@latest
+
+      - name: Authenticate with Power Platform
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          echo " Debug Info:"
-          node --version
-          npm --version
-          pac --version
+          pac auth create --name "Contoso-PP-BuildTools" \
+                          --applicationId $AZURE_CLIENT_ID \
+                          --clientSecret $AZURE_CLIENT_SECRET \
+                          --tenant $AZURE_TENANT_ID
 
-          Write-Host "Checking secrets..."
-          if ($env:AZURE_CLIENT_ID) { Write-Host "AZURE_CLIENT_ID set" } else { Write-Host " AZURE_CLIENT_ID missing" }
-          if ($env:AZURE_TENANT_ID) { Write-Host "AZURE_TENANT_ID set" } else { Write-Host " AZURE_TENANT_ID missing" }
-          if ($env:AZURE_CLIENT_SECRET) { Write-Host "AZURE_CLIENT_SECRET set" } else { Write-Host " AZURE_CLIENT_SECRET missing" }
-
-          Write-Host " Authenticating with Power Platform..."
-          pac auth clear
-          pac auth create --name Contoso-BuildTools `
-            --applicationId "$env:AZURE_CLIENT_ID" `
-            --clientSecret "$env:AZURE_CLIENT_SECRET" `
-            --tenant "$env:AZURE_TENANT_ID"
-
-          Write-Host "Current Auth Profile:"
-          pac auth list
-
-      # Step 5: Validate Power Platform solution
-      - name: Validate Power Platform Solution
+      - name: Validate Solution
         run: |
-          echo "Validating solution..."
-          pac solution validate --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
+          pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
 
-      # Step 6: Deploy to test environment
       - name: Deploy to Test Environment
         run: |
-          echo "Deploying solution to test environment..."
-          pac solution deploy --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
+          pac solution deploy --path "./solution_export" --solutionName "ContosoSolution" --target "test"
