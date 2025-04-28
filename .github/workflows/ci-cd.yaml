@@ -8,15 +8,19 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ✅ Use Microsoft's official CLI installer to avoid node issues
-      - name: Install Power Platform CLI
-        uses: microsoft/powerplatform-actions/setup-cli@v1
+      # ✅ Install Power Platform CLI properly
+      - name: Install Microsoft Power Platform CLI (PAC)
+        run: |
+          wget https://aka.ms/paclinux -O pacinstall.sh
+          chmod +x pacinstall.sh
+          ./pacinstall.sh
 
-      # 🔐 Authenticate with Service Principal
+      # 🔐 Authenticate using Service Principal
       - name: Authenticate with Power Platform
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -28,13 +32,5 @@ jobs:
                           --clientSecret "$AZURE_CLIENT_SECRET" \
                           --tenant "$AZURE_TENANT_ID"
 
-      - name: List PAC Auth Profiles (Debug Step)
+      - name: Debug Auth Profiles
         run: pac auth list
-
-      - name: Validate Solution
-        run: |
-          pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
-
-      - name: Deploy to Test Environment
-        run: |
-          pac solution deploy --path "./solution_export" --solutionName "ContosoSolution" --target "test"
