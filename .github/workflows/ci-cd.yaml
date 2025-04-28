@@ -12,14 +12,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
+      # ✅ Use Microsoft's official CLI installer to avoid node issues
       - name: Install Power Platform CLI
-        run: npm install -g pac@latest
+        uses: microsoft/powerplatform-actions/setup-cli@v1
 
+      # 🔐 Authenticate with Service Principal
       - name: Authenticate with Power Platform
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -27,9 +24,12 @@ jobs:
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
           pac auth create --name "Contoso-PP-BuildTools" \
-                          --applicationId $AZURE_CLIENT_ID \
-                          --clientSecret $AZURE_CLIENT_SECRET \
-                          --tenant $AZURE_TENANT_ID
+                          --applicationId "$AZURE_CLIENT_ID" \
+                          --clientSecret "$AZURE_CLIENT_SECRET" \
+                          --tenant "$AZURE_TENANT_ID"
+
+      - name: List PAC Auth Profiles (Debug Step)
+        run: pac auth list
 
       - name: Validate Solution
         run: |
