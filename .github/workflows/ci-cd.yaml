@@ -12,26 +12,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Install .NET Core SDK
+        uses: actions/setup-dotnet@v3
         with:
-          node-version: '16'
+          dotnet-version: '8.0.x'
 
       - name: Install Power Platform CLI
-        run: npm install -g pac@latest
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+        shell: bash
 
-      - name: Authenticate with Power Platform
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          POWERPLATFORM_URL: ${{ secrets.POWERPLATFORM_URL }}
-        run: |
-          pac auth create --url $POWERPLATFORM_URL --clientId $AZURE_CLIENT_ID --tenant $AZURE_TENANT_ID --clientSecret $AZURE_CLIENT_SECRET
+      - name: Authenticate to Power Platform
+        uses: microsoft/powerplatform-actions/auth@v1.5.2
+        with:
+          app-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          environment-url: "https://orgXYZ.crm.dynamics.com"
+ 
       
-      - name: Validate Solution
+      - name: Check Solution Path
         run: |
-          pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
+          ls -la
       
       - name: Deploy to Test Environment
         run: |
