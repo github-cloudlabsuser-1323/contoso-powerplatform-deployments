@@ -21,7 +21,9 @@ jobs:
 
       # Install Power Platform CLI
       - name: Install Power Platform CLI
-        run: npm install -g pac@latest
+        run: |
+            npm install -g pac@latest
+            npm install graceful-fs@latest
 
       # Authenticate with Power Platform
       - name: Authenticate with Power Platform
