@@ -27,6 +27,15 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
+          echo "Debug: Starting authentication step"
+          echo "Debug: Client ID length: ${#AZURE_CLIENT_ID}"
+          echo "Debug: Tenant ID length: ${#AZURE_TENANT_ID}"
+          echo "Debug: Client Secret length: ${#AZURE_CLIENT_SECRET}"
+          echo "Debug: First few characters of Client ID: ${AZURE_CLIENT_ID:0:4}..."
+          echo "Debug: First few characters of Tenant ID: ${AZURE_TENANT_ID:0:4}..."
+          pac --version
+          pac auth create --name Contoso-PP-BuildTools --applicationId "$AZURE_CLIENT_ID" --clientSecret "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          echo "Debug: Authentication command exit code: $?"
           pac auth create --name Contoso-PP-BuildTools --applicationId ${{ env.AZURE_CLIENT_ID }} --clientSecret ${{ env.AZURE_CLIENT_SECRET }} --tenant ${{ env.AZURE_TENANT_ID }} 
 
       - name: Validate Solution
