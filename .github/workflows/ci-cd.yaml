@@ -13,44 +13,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js version 12 for compatibility
-      - name: Setup Node.js (v12 - compatible with pac)
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '12'
+          node-version: '16'
 
-      # Install Power Platform CLI
       - name: Install Power Platform CLI
-        run: |
-            npm install -g pac@latest
-            npm install graceful-fs@latest
-            npm install -g gulp-cli
-            npm install gulp
+        run: npm install -g pac@latest
 
-      # Authenticate with Power Platform
       - name: Authenticate with Power Platform
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        shell: pwsh
         run: |
-          pac auth create --name Contoso-PP-BuildTools --applicationId 2fb0f645-b890-4367-adf0-05837a4ad6f9 --clientSecret omp8Q~q-5iE9M2p5bvYbSGA4ZCH26of6qLJIydnK --tenant ecdbacb9-a7b8-41cd-ab42-cf0d41acd4f3
+          pac auth create --name Contoso-PP-BuildTools --applicationId $env:AZURE_CLIENT_ID --clientSecret $env:AZURE_CLIENT_SECRET --tenant $env:AZURE_TENANT_ID 
 
-      # Validate the solution
       - name: Validate Solution
-        shell: pwsh
         run: |
-          pac solution validate `
-            --path ".\\solution_export" `
-            --solutionName "ContosoSolution" `
-            --target "test"
+          pac solution validate --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
 
-      # Deploy to Test Environment
       - name: Deploy to Test Environment
-        shell: pwsh
         run: |
-          pac solution deploy `
-            --path ".\\solution_export" `
-            --solutionName "ContosoSolution" `
-            --target "test"
+          pac solution deploy --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
