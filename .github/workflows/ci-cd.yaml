@@ -1,4 +1,4 @@
-name: Power Platform CI/CD
+name: Install PAC and Authenticate
 
 on:
   push:
@@ -6,31 +6,25 @@ on:
       - develop
 
 jobs:
-  build-deploy:
+  install-and-authenticate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      # ✅ Install Power Platform CLI properly
-      - name: Install Microsoft Power Platform CLI (PAC)
-        run: |
-          curl -L https://aka.ms/paclinux -o pacinstall.sh
-          chmod +x pacinstall.sh
-          ./pacinstall.sh
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
 
-      # 🔐 Authenticate using Service Principal
-      - name: Authenticate with Power Platform
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        run: |
-          pac auth create --name "Contoso-PP-BuildTools" \
-                          --applicationId "$AZURE_CLIENT_ID" \
-                          --clientSecret "$AZURE_CLIENT_SECRET" \
-                          --tenant "$AZURE_TENANT_ID"
+    - name: Install PAC
+      run: npm install -g pac
 
-      - name: Debug Auth Profiles
-        run: pac auth list
+    - name: Authenticate to Azure
+      env:
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      run: |
+        pac auth create --name "Contoso-PP-BuildTools" --applicationId $AZURE_CLIENT_ID --clientSecret $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
