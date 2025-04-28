@@ -16,7 +16,7 @@ jobs:
       # ✅ Install Power Platform CLI properly
       - name: Install Microsoft Power Platform CLI (PAC)
         run: |
-          wget https://aka.ms/paclinux -O pacinstall.sh
+          curl -L https://aka.ms/paclinux -o pacinstall.sh
           chmod +x pacinstall.sh
           ./pacinstall.sh
 
