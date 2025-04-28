@@ -1,68 +1,37 @@
-name: Power Platform CI/CD
-
-on:
-  push:
-    branches:
-      - develop
-
-env:
-  ACTIONS_STEP_DEBUG: true
-  ACTIONS_RUNNER_DEBUG: true
-
-jobs:
-  build-deploy:
-    runs-on: windows-latest
-
-    steps:
-      # Step 1: Checkout code
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Step 2: Setup Node.js (LTS version for compatibility)
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      # Step 3: Install Power Platform CLI
-      - name: Install Power Platform CLI
-        run: npm install -g pac@latest
-
-      # Step 4: Authenticate using Service Principal
-      - name: Authenticate with Power Platform (Service Principal)
+name: Authenticate with Power Platform (Service Principal)
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          echo "🔍 Debug Info:"
+          echo " Debug Info:"
           node --version
           npm --version
           pac --version
 
-          echo "🔐 Checking secrets..."
-          [ -n "$AZURE_CLIENT_ID" ] && echo "✅ AZURE_CLIENT_ID set" || echo "❌ AZURE_CLIENT_ID missing"
-          [ -n "$AZURE_TENANT_ID" ] && echo "✅ AZURE_TENANT_ID set" || echo "❌ AZURE_TENANT_ID missing"
-          [ -n "$AZURE_CLIENT_SECRET" ] && echo "✅ AZURE_CLIENT_SECRET set" || echo "❌ AZURE_CLIENT_SECRET missing"
+          Write-Host "Checking secrets..."
+          if ($env:AZURE_CLIENT_ID) { Write-Host "AZURE_CLIENT_ID set" } else { Write-Host " AZURE_CLIENT_ID missing" }
+          if ($env:AZURE_TENANT_ID) { Write-Host "AZURE_TENANT_ID set" } else { Write-Host " AZURE_TENANT_ID missing" }
+          if ($env:AZURE_CLIENT_SECRET) { Write-Host "AZURE_CLIENT_SECRET set" } else { Write-Host " AZURE_CLIENT_SECRET missing" }
 
-          echo "🔑 Authenticating with Power Platform..."
+          Write-Host " Authenticating with Power Platform..."
           pac auth clear
-          pac auth create --name Contoso-BuildTools \
-            --applicationId "$AZURE_CLIENT_ID" \
-            --clientSecret "$AZURE_CLIENT_SECRET" \
-            --tenant "$AZURE_TENANT_ID"
+          pac auth create --name Contoso-BuildTools `
+            --applicationId "$env:AZURE_CLIENT_ID" `
+            --clientSecret "$env:AZURE_CLIENT_SECRET" `
+            --tenant "$env:AZURE_TENANT_ID"
 
-          echo "✅ Current Auth Profile:"
+          Write-Host "Current Auth Profile:"
           pac auth list
 
       # Step 5: Validate Power Platform solution
       - name: Validate Power Platform Solution
         run: |
-          echo "✅ Validating solution..."
+          echo "Validating solution..."
           pac solution validate --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
 
       # Step 6: Deploy to test environment
       - name: Deploy to Test Environment
         run: |
-          echo "🚀 Deploying solution to test environment..."
+          echo "Deploying solution to test environment..."
           pac solution deploy --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
