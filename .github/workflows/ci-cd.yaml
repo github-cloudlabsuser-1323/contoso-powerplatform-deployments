@@ -5,48 +5,64 @@ on:
     branches:
       - develop
 
+env:
+  ACTIONS_STEP_DEBUG: true
+  ACTIONS_RUNNER_DEBUG: true
+
 jobs:
   build-deploy:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout code
+      # Step 1: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Setup Node.js (Recommended LTS)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'  # Tested LTS version with PAC
 
+      # Step 3: Install Power Platform CLI
       - name: Install Power Platform CLI
-        run: npm install -g pac@latest
+        run: npm install -g pac@1.28.6  # Compatible stable version
 
-      - name: Authenticate with Power Platform
+      # Step 4: Authenticate with Power Platform using Service Principal
+      - name: Authenticate with Power Platform (Service Principal)
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
         run: |
-          echo "Debug: Node.js version:"
+          echo "Debug: Verifying Node and PAC versions"
           node --version
-          echo "Debug: NPM version:"
           npm --version
-          echo "Debug: Checking if secrets exist:"
-          if [ -n "$AZURE_CLIENT_ID" ]; then echo "Client ID exists"; else echo "Client ID is empty"; fi
-          if [ -n "$AZURE_TENANT_ID" ]; then echo "Tenant ID exists"; else echo "Tenant ID is empty"; fi
-          if [ -n "$AZURE_CLIENT_SECRET" ]; then echo "Client Secret exists"; else echo "Client Secret is empty"; fi
-          echo "Debug: Installing PAC CLI with specific Node flags:"
-          NODE_OPTIONS=--no-experimental-fetch npm install -g pac@latest
-          echo "Debug: PAC version:"
           pac --version
-          pac auth create --name Contoso-PP-BuildTools --applicationId "$AZURE_CLIENT_ID" --clientSecret "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
-                  echo "Debug: Authentication command exit code: $?"
-                  pac auth create --name Contoso-PP-BuildTools --applicationId ${{ env.AZURE_CLIENT_ID }} --clientSecret ${{ env.AZURE_CLIENT_SECRET }} --tenant ${{ env.AZURE_TENANT_ID }} 
 
-      - name: Validate Solution
+          echo "Debug: Checking if secrets are passed"
+          [ -n "$AZURE_CLIENT_ID" ] && echo "✅ Client ID is set" || echo "❌ Client ID is empty"
+          [ -n "$AZURE_TENANT_ID" ] && echo "✅ Tenant ID is set" || echo "❌ Tenant ID is empty"
+          [ -n "$AZURE_CLIENT_SECRET" ] && echo "✅ Client Secret is set" || echo "❌ Client Secret is empty"
+
+          echo "Debug: Authenticating with PAC CLI"
+          pac auth clear
+          pac auth create --name Contoso-BuildTools \
+            --applicationId "$AZURE_CLIENT_ID" \
+            --clientSecret "$AZURE_CLIENT_SECRET" \
+            --tenant "$AZURE_TENANT_ID"
+
+          echo "Debug: Current Auth Profile:"
+          pac auth list
+
+      # Step 5: Validate the solution before deployment
+      - name: Validate Power Platform Solution
         run: |
+          echo "Validating solution..."
           pac solution validate --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
 
+      # Step 6: Deploy the solution to test environment
       - name: Deploy to Test Environment
         run: |
+          echo "Deploying solution to test environment..."
           pac solution deploy --path ".\\solution_export" --solutionName "ContosoSolution" --target "test"
