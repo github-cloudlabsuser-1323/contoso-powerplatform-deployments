@@ -10,34 +10,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: Install .NET Core SDK
-        uses: actions/setup-dotnet@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          dotnet-version: '8.0.5'
+          node-version: '16'
           
       - name: Install Power Platform CLI
+        run: npm install -g @microsoft/powerplatform-cli-wrapper @microsoft/powerapps-cli
+        
+      - name: Authenticate with PAC CLI
         run: |
-          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          # Authenticate using Service Principal
+          pac auth create --kind ServicePrincipal \
+          --environment "https://orgc7fa0d66.crm.dynamics.com/" \
+          --applicationId ${{ secrets.AZURE_CLIENT_ID }} \
+          --clientSecret ${{ secrets.AZURE_CLIENT_SECRET }} \
+          --tenant ${{ secrets.AZURE_TENANT_ID }}
         shell: bash
-          
-      - name: Authenticate to Power Platform
-        uses: microsoft/powerplatform-actions/actions/auth@v1.5.2
-        with:
-          app-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
-          environment-url: "https://orgc7fa0d66.crm.dynamics.com/"
-          
-      - name: Check Solution Path
+      
+      - name: List solutions directory
         run: |
           ls -la
-          # Navigate to where your solution files are located if needed
+          ls -la ./solution_export || echo "solution_export directory not found"
+      
+      - name: Pack solution
+        run: |
+          # Assuming you have a solution folder with unpacked solution
+          # If you already have a zipped solution, you can skip this step
+          mkdir -p ./solution_output
+          pac solution pack --zipfile ./solution_output/ContosoSolution.zip --folder ./solution_export --packagetype Both
           
-      - name: Deploy Solution
-        uses: microsoft/powerplatform-actions/actions/import-solution@v1.5.2
-        with:
-          environment-url: "https://orgc7fa0d66.crm.dynamics.com/"
-          solution-file: "./YourSolutionFile.zip"
-          force-overwrite: true
-          publish-changes: true
+      - name: Check solution file
+        run: |
+          ls -la ./solution_output
+          
+      - name: Import solution to environment
+        run: |
+          pac solution import --path ./solution_output/ContosoSolution.zip --async false --activate-plugins
+          
+      - name: Publish customizations
+        run: |
+          pac solution publish
