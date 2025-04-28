@@ -16,7 +16,7 @@ jobs:
           node-version: '16'
           
       - name: Install Power Platform CLI
-        run: npm install -g @microsoft/powerplatform-cli-wrapper @microsoft/powerapps-cli
+        run: npm install -g pac@latest
         
       - name: Authenticate with PAC CLI
         run: |
