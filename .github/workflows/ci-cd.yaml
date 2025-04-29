@@ -15,20 +15,22 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '14'  # Use Node 14 to avoid primordials error
+          node-version: '14'  # Use Node 14 to avoid "primordials" error
 
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
 
-      - name: Authenticate with Power Platform
+      - name: Authenticate with Power Platform using Service Principal
         env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_APPLICATION_ID: ${{ secrets.AZURE_APPLICATION_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          POWERPLATFORM_URL: ${{ secrets.POWERPLATFORM_URL }}
         run: |
-          pac auth create --url $POWERPLATFORM_URL --clientId $AZURE_CLIENT_ID --tenant $AZURE_TENANT_ID --clientSecret $AZURE_CLIENT_SECRET
-      
+          pac auth create --name Contoso-PP-BuildTools \
+            --applicationId $AZURE_APPLICATION_ID \
+            --clientSecret $AZURE_CLIENT_SECRET \
+            --tenant $AZURE_TENANT_ID 
+
       - name: Validate Solution
         run: |
           pac solution validate --path "./solution_export" --solutionName "ContosoSolution" --target "test"
