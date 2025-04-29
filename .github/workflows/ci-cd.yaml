@@ -17,11 +17,15 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Install Power Platform CLI
+      - name: Setup .NET SDK (for pac CLI)
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Install Power Platform CLI (via dotnet global tool)
         run: |
-          curl -L -o pac.zip https://aka.ms/PowerAppsCLI
-          unzip pac.zip -d pac
-          sudo mv pac/tools/* /usr/local/bin
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
           pac --version
 
       - name: Authenticate with Power Platform using Service Principal
