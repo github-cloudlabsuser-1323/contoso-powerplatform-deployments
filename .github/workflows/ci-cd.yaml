@@ -20,7 +20,6 @@ jobs:
       - name: Install Power Platform CLI
         uses: microsoft/powerplatform-actions/setup@v1
 
-
       - name: Authenticate with Power Platform using Service Principal
         env:
           AZURE_APPLICATION_ID: ${{ secrets.AZURE_APPLICATION_ID }}
