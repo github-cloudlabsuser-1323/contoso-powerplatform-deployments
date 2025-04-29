@@ -26,7 +26,7 @@ jobs:
         run: |
           dotnet tool install --global Microsoft.PowerApps.CLI.Tool
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-          pac --version
+          pac help
 
       - name: Authenticate with Power Platform using Service Principal
         env:
