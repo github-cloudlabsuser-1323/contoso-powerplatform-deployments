@@ -16,11 +16,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '14'  # Node 14 to avoid primordials error
-
+      
       - name: Install Power Platform CLI
-        run: |
-          npm install -g microsoft/powerplatform-cli
-          echo "$(npm bin -g)" >> $GITHUB_PATH  # Add PAC to PATH
+        uses: microsoft/powerplatform-actions/setup@v1
+
 
       - name: Authenticate with Power Platform using Service Principal
         env:
