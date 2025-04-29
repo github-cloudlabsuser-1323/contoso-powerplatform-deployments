@@ -18,26 +18,28 @@ jobs:
       with:
         node-version: '14'
 
-    - name: Create package.json
+    - name: Create package.json and package-lock.json
       run: |
         echo '{
           "name": "your-project-name",
           "version": "1.0.0",
-          "scripts": {
-            "preinstall": "npx npm-force-resolutions"
-          },
+          "dependencies": {},
           "resolutions": {
             "graceful-fs": "^4.2.11"
           }
         }' > package.json
+        npm install --package-lock-only
 
     - name: Install npm-force-resolutions
       run: npm install -g npm-force-resolutions
 
+    - name: Run npm-force-resolutions
+      run: npx npm-force-resolutions
+
     - name: Install dependencies
       run: npm install
 
-    - name: Install PAC
+    - name: Install PAC CLI
       run: npm install -g pac
 
     - name: Authenticate to Azure
@@ -46,4 +48,7 @@ jobs:
         AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       run: |
-        pac auth create --name "Contoso-PP-BuildTools" --applicationId $AZURE_CLIENT_ID --clientSecret $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+        pac auth create --name "Contoso-PP-BuildTools" \
+          --applicationId $AZURE_CLIENT_ID \
+          --clientSecret $AZURE_CLIENT_SECRET \
+          --tenant $AZURE_TENANT_ID
