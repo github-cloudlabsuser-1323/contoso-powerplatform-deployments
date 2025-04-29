@@ -1,54 +1,50 @@
-name: Install PAC and Authenticate
+name: Power Platform CI/CD
 
 on:
   push:
     branches:
-      - develop
+      - main
+  workflow_dispatch:
 
 jobs:
-  install-and-authenticate:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Create package.json and package-lock.json
-      run: |
-        echo '{
-          "name": "your-project-name",
-          "version": "1.0.0",
-          "dependencies": {},
-          "resolutions": {
-            "graceful-fs": "^4.2.11"
+      - name: Create npm-shrinkwrap.json
+        run: |
+          cat > npm-shrinkwrap.json << 'EOF'
+          {
+            "dependencies": {
+              "graceful-fs": {
+                "version": "4.2.2"
+              }
+            }
           }
-        }' > package.json
-        npm install --package-lock-only
+          EOF
 
-    - name: Install npm-force-resolutions
-      run: npm install -g npm-force-resolutions
+      - name: Create package.json (if not exists)
+        run: |
+          if [ ! -f package.json ]; then
+            echo '{ "name": "pp-solution", "version": "1.0.0", "dependencies": { "graceful-fs": "4.2.2" } }' > package.json
+          fi
 
-    - name: Run npm-force-resolutions
-      run: npx npm-force-resolutions
+      - name: Install npm packages
+        run: npm install
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install Power Platform CLI
+        run: npm install -g pac@latest
 
-    - name: Install PAC CLI
-      run: npm install -g pac
+      - name: Whoami to validate CLI
+        run: pac --version
 
-    - name: Authenticate to Azure
-      env:
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      run: |
-        pac auth create --name "Contoso-PP-BuildTools" \
-          --applicationId $AZURE_CLIENT_ID \
-          --clientSecret $AZURE_CLIENT_SECRET \
-          --tenant $AZURE_TENANT_ID
+      # Add your additional steps here (solution import, export, etc.)
+
