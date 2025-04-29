@@ -19,32 +19,14 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Create npm-shrinkwrap.json
-        run: |
-          cat > npm-shrinkwrap.json << 'EOF'
-          {
-            "dependencies": {
-              "graceful-fs": {
-                "version": "4.2.2"
-              }
-            }
-          }
-          EOF
-
-      - name: Create package.json (if not exists)
-        run: |
-          if [ ! -f package.json ]; then
-            echo '{ "name": "pp-solution", "version": "1.0.0", "dependencies": { "graceful-fs": "4.2.2" } }' > package.json
-          fi
-
-      - name: Install npm packages
+      - name: Install npm packages with shrinkwrap
         run: npm install
 
       - name: Install Power Platform CLI
         run: npm install -g pac@latest
 
-      - name: Whoami to validate CLI
+      - name: Validate pac install
         run: pac --version
 
-      # Add your additional steps here (solution import, export, etc.)
-
+      # Add your actual Power Platform steps here
+      # e.g., auth, export, import, etc.
