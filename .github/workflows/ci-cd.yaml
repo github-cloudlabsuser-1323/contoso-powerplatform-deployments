@@ -16,9 +16,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '14'  # Use Node 14 to avoid "primordials" error
-
-      - name: Install Power Platform Tools
-        uses: microsoft/powerplatform-actions/actions-install@v1
+      
+      - name: Install Power Platform CLI
+        uses: microsoft/powerplatform-actions/setup@v1
 
       - name: Authenticate with Power Platform using Service Principal
         env:
